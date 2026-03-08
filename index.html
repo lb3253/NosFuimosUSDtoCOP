@@ -153,12 +153,12 @@
       border-color: #003893;
     }
 
-    input[type="number"].cop-input {
+    input.cop-input {
       border-color: #e0e0e0;
       background: #f7f8fc;
     }
 
-    input[type="number"].cop-input:focus {
+    input.cop-input:focus {
       border-color: #ce1126;
       background: #fff;
     }
@@ -298,11 +298,9 @@
         <div class="input-wrap">
           <span class="currency-tag">$</span>
           <input
-            type="number"
+            type="text"
             id="usdInput"
             placeholder="0.00"
-            min="0"
-            step="any"
             inputmode="decimal"
           />
         </div>
@@ -383,28 +381,64 @@
       }).format(amount);
     }
 
-    // Format a raw number with commas: 4127500 → "4,127,500"
-    function addCommas(num) {
-      return Math.round(num).toLocaleString('en-US');
-    }
-
-    // Strip commas to get raw number: "4,127,500" → 4127500
-    function stripCommas(str) {
-      return parseFloat(String(str).replace(/,/g, ''));
-    }
-
     function round(val, decimals) {
       return Math.round(val * 10 ** decimals) / 10 ** decimals;
+    }
+
+    // Apply live comma formatting while preserving cursor position.
+    // allowDecimal: true for USD (e.g. 1,234.56), false for COP (integers only)
+    function applyFormat(input, allowDecimal) {
+      const pos = input.selectionStart;
+      const old = input.value;
+
+      // Count non-comma chars before cursor so we can restore position after formatting
+      const sigBeforeCursor = old.slice(0, pos).replace(/,/g, '').length;
+
+      // Strip invalid chars
+      let clean = old.replace(/,/g, '');
+      if (allowDecimal) {
+        clean = clean.replace(/[^\d.]/g, '');
+        // Only one decimal point; max 2 decimal places
+        const dotIdx = clean.indexOf('.');
+        if (dotIdx !== -1) {
+          clean = clean.slice(0, dotIdx + 1) + clean.slice(dotIdx + 1).replace(/\./g, '').slice(0, 2);
+        }
+      } else {
+        clean = clean.replace(/[^\d]/g, '');
+      }
+
+      // Add commas to integer part
+      let formatted;
+      if (allowDecimal && clean.includes('.')) {
+        const [intPart, decPart] = clean.split('.');
+        formatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + decPart;
+      } else {
+        formatted = clean.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      }
+
+      input.value = formatted;
+
+      // Restore cursor: walk formatted string counting non-comma chars until we hit sigBeforeCursor
+      let count = 0, newPos = 0;
+      for (let i = 0; i < formatted.length; i++) {
+        if (count === sigBeforeCursor) { newPos = i; break; }
+        if (formatted[i] !== ',') count++;
+        newPos = i + 1;
+      }
+      input.setSelectionRange(newPos, newPos);
+
+      return parseFloat(clean) || 0;
     }
 
     usdInput.addEventListener('input', () => {
       if (updating) return;
       updating = true;
-      const val = parseFloat(usdInput.value);
-      if (usdInput.value === '' || isNaN(val)) {
+      const val = applyFormat(usdInput, true);
+      if (usdInput.value === '') {
         copInput.value = '';
       } else if (exchangeRate) {
-        copInput.value = addCommas(val * exchangeRate);
+        const cop = round(val * exchangeRate, 0);
+        copInput.value = cop.toLocaleString('en-US');
       }
       updating = false;
     });
@@ -412,45 +446,25 @@
     copInput.addEventListener('input', () => {
       if (updating) return;
       updating = true;
-      // Strip commas user may have typed or that were auto-inserted
-      const raw = copInput.value.replace(/,/g, '');
-      const val = parseFloat(raw);
-      if (raw === '' || isNaN(val)) {
+      const val = applyFormat(copInput, false);
+      if (copInput.value === '') {
         usdInput.value = '';
       } else if (exchangeRate) {
-        usdInput.value = round(val / exchangeRate, 2);
+        const usd = round(val / exchangeRate, 2);
+        usdInput.value = usd.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
       }
       updating = false;
     });
 
-    // Format COP with commas when user leaves the field
-    copInput.addEventListener('blur', () => {
-      const raw = stripCommas(copInput.value);
-      if (!isNaN(raw) && copInput.value !== '') {
-        copInput.value = addCommas(raw);
-      }
-    });
-
-    // Strip commas when user focuses so typing works naturally
-    copInput.addEventListener('focus', () => {
-      const raw = stripCommas(copInput.value);
-      if (!isNaN(raw) && copInput.value !== '') {
-        copInput.value = Math.round(raw);
-      }
-    });
-
     function fillUSD(amount) {
-      usdInput.value = amount;
-      if (exchangeRate) copInput.value = addCommas(amount * exchangeRate);
+      usdInput.value = amount.toLocaleString('en-US');
+      if (exchangeRate) copInput.value = round(amount * exchangeRate, 0).toLocaleString('en-US');
       usdInput.focus();
     }
 
     function swapFocus() {
-      if (document.activeElement === usdInput) {
-        copInput.focus();
-      } else {
-        usdInput.focus();
-      }
+      if (document.activeElement === usdInput) copInput.focus();
+      else usdInput.focus();
     }
 
     function updateQuickCards() {
@@ -482,7 +496,7 @@
         statusDot.className = 'dot live';
         updateQuickCards();
         if (usdInput.value) usdInput.dispatchEvent(new Event('input'));
-        if (copInput.value) copInput.dispatchEvent(new Event('input'));
+        if (copInput.value)  copInput.dispatchEvent(new Event('input'));
       } catch (err) {
         statusDot.className = 'dot error';
         rateText.textContent = 'Could not load rate — tap to retry';
