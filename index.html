@@ -418,9 +418,10 @@
       statusDot.className = 'dot loading';
       rateText.textContent = 'Fetching live rate…';
       try {
-        const res = await fetch('https://api.frankfurter.app/latest?from=USD&to=COP');
+        const res = await fetch('https://open.er-api.com/v6/latest/USD');
         if (!res.ok) throw new Error('API error');
         const data = await res.json();
+        if (data.result !== 'success') throw new Error('API error');
         exchangeRate = data.rates.COP;
         const formatted = new Intl.NumberFormat('en-US', {
           minimumFractionDigits: 0,
