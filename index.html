@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>USD → Colombian Peso Calculator</title>
+  <title>USD ↔ Colombian Peso Calculator</title>
   <style>
     * {
       box-sizing: border-box;
@@ -24,7 +24,7 @@
     .card {
       background: #fff;
       border-radius: 24px;
-      padding: 36px 32px 28px;
+      padding: 28px 32px 28px;
       width: 100%;
       max-width: 420px;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
@@ -33,15 +33,23 @@
     /* ── Header ── */
     .header {
       text-align: center;
-      margin-bottom: 28px;
+      margin-bottom: 24px;
     }
 
-    .logo {
-      width: 120px;
-      height: 120px;
+    .logo-wrap {
+      width: 160px;
+      height: 160px;
+      overflow: hidden;
+      border-radius: 26px;
+      margin: 0 auto 10px;
+    }
+
+    .logo-wrap img {
+      width: 130%;
+      height: 130%;
       object-fit: contain;
-      margin-bottom: 10px;
-      border-radius: 22px;
+      margin: -15%;
+      display: block;
     }
 
     h1 {
@@ -50,9 +58,7 @@
       color: #1a1a2e;
     }
 
-    h1 span {
-      color: #003893;
-    }
+    h1 span { color: #003893; }
 
     /* ── Rate badge ── */
     .rate-badge {
@@ -77,20 +83,20 @@
       transition: background 0.3s;
     }
 
-    .rate-badge .dot.live { background: #22c55e; }
+    .rate-badge .dot.live    { background: #22c55e; }
     .rate-badge .dot.loading { background: #f59e0b; animation: pulse 1s infinite; }
-    .rate-badge .dot.error { background: #ef4444; }
+    .rate-badge .dot.error   { background: #ef4444; }
 
     @keyframes pulse {
       0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
+      50%       { opacity: 0.3; }
     }
 
     /* ── Converter ── */
     .converter {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 10px;
     }
 
     label {
@@ -130,6 +136,7 @@
       outline: none;
       transition: border-color 0.2s;
       appearance: textfield;
+      background: #fff;
     }
 
     input[type="number"]::-webkit-inner-spin-button,
@@ -139,67 +146,55 @@
       border-color: #003893;
     }
 
-    .result-box {
-      background: linear-gradient(135deg, #003893, #1a5fd8);
-      border-radius: 12px;
-      padding: 14px 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    input[type="number"].cop-input {
+      border-color: #e0e0e0;
+      background: #f7f8fc;
     }
 
-    .result-label {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: rgba(255,255,255,0.7);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+    input[type="number"].cop-input:focus {
+      border-color: #ce1126;
+      background: #fff;
     }
 
-    .result-amount {
-      font-size: 1.6rem;
-      font-weight: 800;
-      color: #fff;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .result-amount.placeholder {
-      opacity: 0.35;
-      font-size: 1.1rem;
-    }
-
-    .cop-tag {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: rgba(255,255,255,0.6);
-      background: rgba(255,255,255,0.12);
-      border-radius: 6px;
-      padding: 2px 7px;
-      margin-top: 2px;
-    }
-
-    /* ── Divider ── */
+    /* ── Swap button ── */
     .divider {
       display: flex;
       align-items: center;
       gap: 10px;
-      margin: 4px 0;
-      color: #ccc;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
+      margin: 2px 0;
     }
 
-    .divider::before, .divider::after {
-      content: '';
+    .divider-line {
       flex: 1;
       height: 1px;
       background: #eee;
     }
 
+    .swap-btn {
+      background: #f0f4ff;
+      border: 1px solid #c8d8ff;
+      border-radius: 50%;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1rem;
+      color: #003893;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .swap-btn:hover {
+      background: #003893;
+      color: #fff;
+      transform: rotate(180deg);
+    }
+
     /* ── Quick Reference ── */
     .quick-section {
-      margin-top: 22px;
+      margin-top: 20px;
     }
 
     .quick-title {
@@ -234,9 +229,7 @@
       transform: translateY(-2px);
     }
 
-    .quick-card:active {
-      transform: translateY(0);
-    }
+    .quick-card:active { transform: translateY(0); }
 
     .quick-usd {
       font-size: 1rem;
@@ -258,14 +251,12 @@
       min-height: 1.1em;
     }
 
-    .quick-cop.loading-text {
-      color: #bbb;
-    }
+    .quick-cop.loading-text { color: #bbb; }
 
     /* ── Footer ── */
     .footer {
       text-align: center;
-      margin-top: 20px;
+      margin-top: 18px;
       font-size: 0.7rem;
       color: #bbb;
     }
@@ -281,8 +272,10 @@
 
     <!-- Header -->
     <div class="header">
-      <img src="MlyOQ.jpg" alt="Nos Fuimos logo" class="logo" />
-      <h1>USD → <span>Colombian Peso</span></h1>
+      <div class="logo-wrap">
+        <img src="MlyOQ.jpg" alt="Nos Fuimos logo" />
+      </div>
+      <h1>USD ↔ <span>Colombian Peso</span></h1>
       <div class="rate-badge">
         <span class="dot loading" id="statusDot"></span>
         <span id="rateText">Fetching live rate…</span>
@@ -291,8 +284,10 @@
 
     <!-- Converter -->
     <div class="converter">
+
+      <!-- USD -->
       <div>
-        <label>Amount in US Dollars</label>
+        <label>US Dollars (USD)</label>
         <div class="input-wrap">
           <span class="currency-tag">$</span>
           <input
@@ -306,35 +301,48 @@
         </div>
       </div>
 
-      <div class="divider">equals</div>
+      <!-- Swap divider -->
+      <div class="divider">
+        <div class="divider-line"></div>
+        <button class="swap-btn" onclick="swapFocus()" title="Switch direction">⇅</button>
+        <div class="divider-line"></div>
+      </div>
 
+      <!-- COP -->
       <div>
         <label>Colombian Pesos (COP)</label>
-        <div class="result-box">
-          <div>
-            <div class="result-label">Result</div>
-            <div class="result-amount placeholder" id="copResult">Enter an amount</div>
-          </div>
-          <div class="cop-tag">COP</div>
+        <div class="input-wrap">
+          <span class="currency-tag" style="font-size:0.75rem;color:#aaa;">COP</span>
+          <input
+            type="number"
+            id="copInput"
+            placeholder="0"
+            min="0"
+            step="any"
+            inputmode="decimal"
+            class="cop-input"
+            style="padding-left: 58px;"
+          />
         </div>
       </div>
+
     </div>
 
     <!-- Quick Reference -->
     <div class="quick-section">
       <div class="quick-title">⚡ Quick Reference</div>
       <div class="quick-grid">
-        <div class="quick-card" onclick="fillAmount(20)">
+        <div class="quick-card" onclick="fillUSD(20)">
           <div class="quick-usd">$20</div>
           <div class="quick-arrow">↓</div>
           <div class="quick-cop loading-text" id="q20">Loading…</div>
         </div>
-        <div class="quick-card" onclick="fillAmount(50)">
+        <div class="quick-card" onclick="fillUSD(50)">
           <div class="quick-usd">$50</div>
           <div class="quick-arrow">↓</div>
           <div class="quick-cop loading-text" id="q50">Loading…</div>
         </div>
-        <div class="quick-card" onclick="fillAmount(100)">
+        <div class="quick-card" onclick="fillUSD(100)">
           <div class="quick-usd">$100</div>
           <div class="quick-arrow">↓</div>
           <div class="quick-cop loading-text" id="q100">Loading…</div>
@@ -343,24 +351,24 @@
     </div>
 
     <div class="footer">
-      Rate via <a href="https://www.frankfurter.app" target="_blank">Frankfurter API</a> &nbsp;·&nbsp;
-      Tap a quick-reference card to auto-fill
+      Live rate via <a href="https://www.exchangerate-api.com" target="_blank">ExchangeRate API</a>
+      &nbsp;·&nbsp; Tap a card to auto-fill
     </div>
 
   </div>
 
   <script>
     let exchangeRate = null;
+    let updating = false;
 
-    const usdInput   = document.getElementById('usdInput');
-    const copResult  = document.getElementById('copResult');
-    const rateText   = document.getElementById('rateText');
-    const statusDot  = document.getElementById('statusDot');
-    const q20        = document.getElementById('q20');
-    const q50        = document.getElementById('q50');
-    const q100       = document.getElementById('q100');
+    const usdInput  = document.getElementById('usdInput');
+    const copInput  = document.getElementById('copInput');
+    const rateText  = document.getElementById('rateText');
+    const statusDot = document.getElementById('statusDot');
+    const q20       = document.getElementById('q20');
+    const q50       = document.getElementById('q50');
+    const q100      = document.getElementById('q100');
 
-    // Format number as Colombian Peso with periods as thousands separator
     function formatCOP(amount) {
       return new Intl.NumberFormat('es-CO', {
         style: 'currency',
@@ -370,40 +378,50 @@
       }).format(amount);
     }
 
-    function convert(usd) {
-      if (!exchangeRate || isNaN(usd) || usd === '') return null;
-      return usd * exchangeRate;
+    function round(val, decimals) {
+      return Math.round(val * 10 ** decimals) / 10 ** decimals;
     }
 
-    function updateResult() {
+    usdInput.addEventListener('input', () => {
+      if (updating) return;
+      updating = true;
       const val = parseFloat(usdInput.value);
-      if (usdInput.value === '' || isNaN(val) || val < 0) {
-        copResult.textContent = 'Enter an amount';
-        copResult.classList.add('placeholder');
-        return;
+      if (usdInput.value === '' || isNaN(val)) {
+        copInput.value = '';
+      } else if (exchangeRate) {
+        copInput.value = round(val * exchangeRate, 0);
       }
-      if (!exchangeRate) {
-        copResult.textContent = 'Rate unavailable';
-        copResult.classList.add('placeholder');
-        return;
-      }
-      copResult.textContent = formatCOP(val * exchangeRate);
-      copResult.classList.remove('placeholder');
-    }
+      updating = false;
+    });
 
-    function fillAmount(amount) {
+    copInput.addEventListener('input', () => {
+      if (updating) return;
+      updating = true;
+      const val = parseFloat(copInput.value);
+      if (copInput.value === '' || isNaN(val)) {
+        usdInput.value = '';
+      } else if (exchangeRate) {
+        usdInput.value = round(val / exchangeRate, 2);
+      }
+      updating = false;
+    });
+
+    function fillUSD(amount) {
       usdInput.value = amount;
-      updateResult();
+      if (exchangeRate) copInput.value = round(amount * exchangeRate, 0);
       usdInput.focus();
     }
 
+    function swapFocus() {
+      if (document.activeElement === usdInput) {
+        copInput.focus();
+      } else {
+        usdInput.focus();
+      }
+    }
+
     function updateQuickCards() {
-      const cards = [
-        { el: q20,  usd: 20  },
-        { el: q50,  usd: 50  },
-        { el: q100, usd: 100 },
-      ];
-      cards.forEach(({ el, usd }) => {
+      [{ el: q20, usd: 20 }, { el: q50, usd: 50 }, { el: q100, usd: 100 }].forEach(({ el, usd }) => {
         if (exchangeRate) {
           el.textContent = formatCOP(usd * exchangeRate);
           el.classList.remove('loading-text');
@@ -430,17 +448,17 @@
         rateText.textContent = `1 USD = ${formatted} COP`;
         statusDot.className = 'dot live';
         updateQuickCards();
-        updateResult();
+        // Recalculate if a value is already entered
+        if (usdInput.value) usdInput.dispatchEvent(new Event('input'));
+        if (copInput.value)  copInput.dispatchEvent(new Event('input'));
       } catch (err) {
         statusDot.className = 'dot error';
-        rateText.textContent = 'Could not load rate — retry?';
+        rateText.textContent = 'Could not load rate — tap to retry';
         rateText.style.cursor = 'pointer';
         rateText.onclick = fetchRate;
         updateQuickCards();
       }
     }
-
-    usdInput.addEventListener('input', updateResult);
 
     fetchRate();
   </script>
