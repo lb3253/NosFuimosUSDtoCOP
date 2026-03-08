@@ -4,6 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>USD ↔ Colombian Peso Calculator</title>
+  <!-- PWA / Home Screen -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#003893" />
+  <link rel="apple-touch-icon" href="MlyOQ.jpg" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Nos Fuimos" />
   <style>
     * {
       box-sizing: border-box;
@@ -314,12 +321,10 @@
         <div class="input-wrap">
           <span class="currency-tag" style="font-size:0.75rem;color:#aaa;">COP</span>
           <input
-            type="number"
+            type="text"
             id="copInput"
             placeholder="0"
-            min="0"
-            step="any"
-            inputmode="decimal"
+            inputmode="numeric"
             class="cop-input"
             style="padding-left: 58px;"
           />
@@ -378,6 +383,16 @@
       }).format(amount);
     }
 
+    // Format a raw number with commas: 4127500 → "4,127,500"
+    function addCommas(num) {
+      return Math.round(num).toLocaleString('en-US');
+    }
+
+    // Strip commas to get raw number: "4,127,500" → 4127500
+    function stripCommas(str) {
+      return parseFloat(String(str).replace(/,/g, ''));
+    }
+
     function round(val, decimals) {
       return Math.round(val * 10 ** decimals) / 10 ** decimals;
     }
@@ -389,7 +404,7 @@
       if (usdInput.value === '' || isNaN(val)) {
         copInput.value = '';
       } else if (exchangeRate) {
-        copInput.value = round(val * exchangeRate, 0);
+        copInput.value = addCommas(val * exchangeRate);
       }
       updating = false;
     });
@@ -397,8 +412,10 @@
     copInput.addEventListener('input', () => {
       if (updating) return;
       updating = true;
-      const val = parseFloat(copInput.value);
-      if (copInput.value === '' || isNaN(val)) {
+      // Strip commas user may have typed or that were auto-inserted
+      const raw = copInput.value.replace(/,/g, '');
+      const val = parseFloat(raw);
+      if (raw === '' || isNaN(val)) {
         usdInput.value = '';
       } else if (exchangeRate) {
         usdInput.value = round(val / exchangeRate, 2);
@@ -406,9 +423,25 @@
       updating = false;
     });
 
+    // Format COP with commas when user leaves the field
+    copInput.addEventListener('blur', () => {
+      const raw = stripCommas(copInput.value);
+      if (!isNaN(raw) && copInput.value !== '') {
+        copInput.value = addCommas(raw);
+      }
+    });
+
+    // Strip commas when user focuses so typing works naturally
+    copInput.addEventListener('focus', () => {
+      const raw = stripCommas(copInput.value);
+      if (!isNaN(raw) && copInput.value !== '') {
+        copInput.value = Math.round(raw);
+      }
+    });
+
     function fillUSD(amount) {
       usdInput.value = amount;
-      if (exchangeRate) copInput.value = round(amount * exchangeRate, 0);
+      if (exchangeRate) copInput.value = addCommas(amount * exchangeRate);
       usdInput.focus();
     }
 
@@ -448,9 +481,8 @@
         rateText.textContent = `1 USD = ${formatted} COP`;
         statusDot.className = 'dot live';
         updateQuickCards();
-        // Recalculate if a value is already entered
         if (usdInput.value) usdInput.dispatchEvent(new Event('input'));
-        if (copInput.value)  copInput.dispatchEvent(new Event('input'));
+        if (copInput.value) copInput.dispatchEvent(new Event('input'));
       } catch (err) {
         statusDot.className = 'dot error';
         rateText.textContent = 'Could not load rate — tap to retry';

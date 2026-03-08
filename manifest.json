@@ -1,0 +1,17 @@
+{
+  "name": "Nos Fuimos - USD to COP",
+  "short_name": "Nos Fuimos",
+  "description": "USD to Colombian Peso currency calculator",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#003893",
+  "theme_color": "#003893",
+  "icons": [
+    {
+      "src": "MlyOQ.jpg",
+      "sizes": "any",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
